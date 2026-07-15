@@ -17,6 +17,38 @@ class BookingSeeder extends Seeder
         $rooms = Room::all();
 
         if ($tenant && $rooms->count() >= 2) {
+            
+            // Generate historical data for charts
+            for ($i = 1; $i <= 5; $i++) {
+                $pastDate = Carbon::now()->subMonths($i);
+                
+                $room = $rooms->random();
+                $duration = rand(1, 3);
+                $endDate = $pastDate->copy()->addMonths($duration);
+                $totalPrice = $room->price * $duration;
+
+                $booking = Booking::create([
+                    'tenant_id' => $tenant->id,
+                    'room_id' => $room->id,
+                    'start_date' => $pastDate,
+                    'end_date' => $endDate,
+                    'duration_months' => $duration,
+                    'total_price' => $totalPrice,
+                    'status' => 'completed',
+                    'created_at' => $pastDate,
+                    'updated_at' => $endDate,
+                ]);
+
+                Payment::create([
+                    'booking_id' => $booking->id,
+                    'amount' => $totalPrice,
+                    'status' => 'paid',
+                    'payment_date' => $pastDate->copy()->addDays(rand(0, 3)),
+                    'created_at' => $pastDate,
+                    'updated_at' => $pastDate->copy()->addDays(rand(0, 3)),
+                ]);
+            }
+
             // Scenario 1: Active Booking & Paid
             $room1 = $rooms[0];
             $startDate1 = Carbon::now();

@@ -6,21 +6,93 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Models\Payment;
+use App\Models\Booking;
+use App\Models\Property;
+use App\Models\Room;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $totalUsers = \App\Models\User::count();
-        $superadminCount = \App\Models\User::where('role', 'Superadmin')->count();
-        $adminCount = \App\Models\User::where('role', 'Admin')->count();
+        $user = Auth::user();
+        $data = ['title' => 'Dashboard', 'user' => $user];
 
-        return view('dashboard.index', [
-            'title' => 'Dashboard',
-            'totalUsers' => $totalUsers,
-            'superadminCount' => $superadminCount,
-            'adminCount' => $adminCount,
-        ]);
+        if ($user->role === 'superadmin') {
+            $data['totalTenants'] = User::where('role', 'tenant')->count();
+            $data['totalOwners'] = User::where('role', 'owner')->count();
+            $data['totalTransactions'] = Payment::count();
+            $data['totalRevenue'] = Payment::where('status', 'paid')->sum('amount');
+            
+            // Chart Data for last 6 months (SQLite specific date format string)
+            $chartData = Payment::where('status', 'paid')
+                ->select(
+                    DB::raw('sum(amount) as sums'),
+                    DB::raw("strftime('%Y-%m', payment_date) as month")
+                )
+                ->where('payment_date', '>=', Carbon::now()->subMonths(6))
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+            
+            $data['chartLabels'] = $chartData->pluck('month');
+            $data['chartValues'] = $chartData->pluck('sums');
+        } 
+        elseif ($user->role === 'owner') {
+            $propertyIds = Property::where('owner_id', $user->id)->pluck('id');
+            $rooms = Room::whereIn('property_id', $propertyIds)->get();
+            
+            $totalRooms = $rooms->count();
+            $activeBookingsCount = Booking::whereIn('room_id', $rooms->pluck('id'))
+                                          ->where('status', 'active')
+                                          ->count();
+                                          
+            $data['occupancyRate'] = $totalRooms > 0 ? round(($activeBookingsCount / $totalRooms) * 100, 2) : 0;
+            
+            $data['totalRevenue'] = Payment::where('status', 'paid')
+                ->whereHas('booking.room', function($q) use ($propertyIds) {
+                    $q->whereIn('property_id', $propertyIds);
+                })->sum('amount');
+                
+            $data['pendingPayments'] = Payment::where('status', 'unpaid')
+                ->whereHas('booking.room', function($q) use ($propertyIds) {
+                    $q->whereIn('property_id', $propertyIds);
+                })->count();
+
+            // Chart Data for last 6 months (SQLite specific date format string)
+            $chartData = Payment::where('status', 'paid')
+                ->whereHas('booking.room', function($q) use ($propertyIds) {
+                    $q->whereIn('property_id', $propertyIds);
+                })
+                ->select(
+                    DB::raw('sum(amount) as sums'),
+                    DB::raw("strftime('%Y-%m', payment_date) as month")
+                )
+                ->where('payment_date', '>=', Carbon::now()->subMonths(6))
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get();
+            
+            $data['chartLabels'] = $chartData->pluck('month');
+            $data['chartValues'] = $chartData->pluck('sums');
+        }
+        elseif ($user->role === 'tenant') {
+            $data['activeBookings'] = Booking::with('room.property')
+                ->where('tenant_id', $user->id)
+                ->where('status', 'active')
+                ->get();
+                
+            $data['pendingPayments'] = Payment::with('booking.room.property')
+                ->whereHas('booking', function($q) use ($user) {
+                    $q->where('tenant_id', $user->id);
+                })
+                ->where('status', 'unpaid')
+                ->get();
+        }
+
+        return view('dashboard.index', $data);
     }
 
     public function show()
