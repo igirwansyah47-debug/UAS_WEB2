@@ -40,6 +40,8 @@ class PropertyController extends Controller
             'description' => 'nullable|string',
             'address' => 'required|string|max:255',
             'city' => 'required|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'image' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
         ]);
 
@@ -93,6 +95,8 @@ class PropertyController extends Controller
             'description' => 'nullable|string',
             'address' => 'required|string|max:255',
             'city' => 'required|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'image' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
         ]);
 

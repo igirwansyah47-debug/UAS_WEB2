@@ -6,6 +6,13 @@
             <a class="btn btn-primary" href="{{ route('property.create') }}">Tambah</a>
         </div>
         @endif
+        @if(Auth::user()->role === 'tenant')
+        <div class="mb-4">
+            <h5>Peta Persebaran Kos</h5>
+            <div id="map" style="height: 400px; width: 100%; border-radius: 8px; border: 1px solid #ddd;"></div>
+        </div>
+        @endif
+        
         <div class="table-responsive">
             <table class="table table-bordered table-striped w-100">
                 <thead>
@@ -48,4 +55,26 @@
             </table>
         </div>
     </div>
+
+    @push('scripts')
+    @if(Auth::user()->role === 'tenant')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([-6.200000, 106.816666], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        var properties = @json($properties);
+        
+        properties.forEach(function(prop) {
+            if(prop.latitude && prop.longitude) {
+                var marker = L.marker([prop.latitude, prop.longitude]).addTo(map);
+                marker.bindPopup(`<b>${prop.name}</b><br>${prop.city}<br><a href="/property/${prop.id}">Lihat Detail</a>`);
+            }
+        });
+    </script>
+    @endif
+    @endpush
 </x-app>

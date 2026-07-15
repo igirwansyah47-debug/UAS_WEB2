@@ -17,6 +17,8 @@ class PropertySeeder extends Seeder
                 'description' => 'Kos nyaman dan aman untuk mahasiswa dan karyawan.',
                 'address' => 'Jl. Mawar No. 123',
                 'city' => 'Jakarta',
+                'latitude' => -6.200000,
+                'longitude' => 106.816666,
                 'is_verified' => true,
             ]);
 
@@ -27,6 +29,8 @@ class PropertySeeder extends Seeder
                 'description' => 'Kos baru dengan fasilitas lengkap, menunggu verifikasi admin.',
                 'address' => 'Jl. Melati No. 45',
                 'city' => 'Bandung',
+                'latitude' => -6.914744,
+                'longitude' => 107.609810,
                 'is_verified' => false,
             ]);
         }

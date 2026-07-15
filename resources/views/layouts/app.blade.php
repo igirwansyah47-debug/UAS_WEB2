@@ -354,13 +354,21 @@
 
             @if(Auth::user()->role === 'tenant')
             <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('wishlist.*') ? '' : 'collapsed' }}"
-                    href="{{ route('wishlist.index') }}">
-                    <i class='bx bx-heart'></i>
-                    <span>Wishlist</span>
-                </a>
-            </li>
-            @endif
+        <a class="nav-link {{ request()->routeIs('wishlist.*') ? '' : 'collapsed' }}" href="{{ route('wishlist.index') }}">
+          <i class="bi bi-heart"></i>
+          <span>Wishlist</span>
+        </a>
+      </li>
+      @endif
+
+      <li class="nav-item">
+        <a class="nav-link {{ request()->routeIs('chat.*') ? '' : 'collapsed' }}" href="{{ route('chat.index') }}">
+          <i class="bi bi-chat-dots"></i>
+          <span>Pesan</span>
+        </a>
+      </li>
+
+      <li class="nav-heading">Akun</li>
 
         </ul>
 

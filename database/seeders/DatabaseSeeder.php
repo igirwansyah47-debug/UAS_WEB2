@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             ReviewSeeder::class,
             ComplaintSeeder::class,
             WishlistSeeder::class,
+            MessageSeeder::class,
         ]);
     }
 }

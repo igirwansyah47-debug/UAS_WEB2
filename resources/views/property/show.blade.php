@@ -20,6 +20,12 @@
         <p>{{ $property->description }}</p>
         <p>{{ $property->address }}, {{ $property->city }}</p>
         
+        @if(Auth::user()->role === 'tenant')
+            <a href="{{ route('chat.index', ['user' => $property->owner_id]) }}" class="btn btn-primary btn-sm mb-3">
+                <i class="bi bi-chat-dots"></i> Chat Pemilik Kos
+            </a>
+        @endif
+        
         @php
             $avgRating = $property->reviews->avg('rating');
         @endphp
@@ -32,7 +38,14 @@
             @endif
         </p>
 
-        @if($property->image) <img src="{{ asset('storage/'.$property->image) }}" style="max-width:300px;"> @endif
+        @if($property->image) <img src="{{ asset('storage/'.$property->image) }}" class="mb-3" style="max-width:300px; display:block;"> @endif
+        
+        @if($property->latitude && $property->longitude)
+        <div class="mb-3">
+            <h5>Lokasi</h5>
+            <div id="map" style="height: 300px; width: 100%; max-width: 600px; border-radius: 8px; border: 1px solid #ddd;"></div>
+        </div>
+        @endif
         
         <hr>
         <h5>Kamar Tersedia</h5>
@@ -88,4 +101,23 @@
         </div>
         @endif
     </div>
+    
+    @push('scripts')
+    @if($property->latitude && $property->longitude)
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        var lat = {{ $property->latitude }};
+        var lng = {{ $property->longitude }};
+        var map = L.map('map').setView([lat, lng], 15);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        L.marker([lat, lng]).addTo(map)
+            .bindPopup("<b>{{ $property->name }}</b>").openPopup();
+    </script>
+    @endif
+    @endpush
 </x-app>

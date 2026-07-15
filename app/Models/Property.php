@@ -9,7 +9,7 @@ class Property extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['owner_id', 'name', 'description', 'address', 'city', 'image', 'is_verified'];
+    protected $fillable = ['owner_id', 'name', 'description', 'address', 'city', 'latitude', 'longitude', 'image', 'is_verified'];
 
     protected $casts = [
         'is_verified' => 'boolean',
