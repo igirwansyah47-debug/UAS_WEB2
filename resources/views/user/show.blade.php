@@ -22,6 +22,16 @@
             <div class="list-group-item px-0 border-0">
                 <div class="row">
                     <div class="col-4 text-muted">
+                        <i class='bx bx-phone me-2'></i>No. HP
+                    </div>
+                    <div class="col-8 fw-semibold">
+                        {{ $user->phone ?? '-' }}
+                    </div>
+                </div>
+            </div>
+            <div class="list-group-item px-0 border-0">
+                <div class="row">
+                    <div class="col-4 text-muted">
                         <i class='bx bx-calendar-plus me-2'></i>Dibuat
                     </div>
                     <div class="col-8">

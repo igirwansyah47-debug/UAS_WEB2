@@ -17,6 +17,7 @@
                         <th scope="col">#</th>
                         <th scope="col">Name</th>
                         <th scope="col">Email</th>
+                        <th scope="col">No. HP</th>
                         <th scope="col">Role</th>
                         <th scope="col">Action</th>
                     </tr>
@@ -27,6 +28,7 @@
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
+                            <td>{{ $user->phone }}</td>
                             <td>{{ $user->role }}</td>
                             <td>
                                 <button type="button" class="btn btn-info btn-sm btn-detail"
