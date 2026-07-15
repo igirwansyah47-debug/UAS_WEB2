@@ -327,6 +327,24 @@
                 </a>
             </li>
 
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('complaint.*') ? '' : 'collapsed' }}"
+                    href="{{ route('complaint.index') }}">
+                    <i class='bx bx-message-alt-error'></i>
+                    <span>Komplain</span>
+                </a>
+            </li>
+
+            @if(Auth::user()->role === 'tenant')
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('wishlist.*') ? '' : 'collapsed' }}"
+                    href="{{ route('wishlist.index') }}">
+                    <i class='bx bx-heart'></i>
+                    <span>Wishlist</span>
+                </a>
+            </li>
+            @endif
+
         </ul>
 
     </aside><!-- End Sidebar-->

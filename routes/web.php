@@ -32,6 +32,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('/booking', App\Http\Controllers\BookingController::class)->only(['index', 'create', 'store', 'show'])->middleware('role:superadmin,owner,tenant');
     Route::post('/booking/{booking}/mark-as-paid', [App\Http\Controllers\BookingController::class, 'markAsPaid'])->name('booking.markAsPaid')->middleware('role:superadmin,owner');
 
+    Route::post('/review', [App\Http\Controllers\ReviewController::class, 'store'])->name('review.store')->middleware('role:tenant');
+    Route::resource('/complaint', App\Http\Controllers\ComplaintController::class)->only(['index', 'create', 'store', 'show', 'update'])->middleware('role:superadmin,owner,tenant');
+    Route::get('/wishlist', [App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index')->middleware('role:tenant');
+    Route::post('/wishlist/toggle', [App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle')->middleware('role:tenant');
+
     Route::get('/setting', [SettingController::class, 'index'])->name('setting.index');
     Route::put('/setting/{setting}/update', [SettingController::class, 'update'])->name('setting.update');
 });

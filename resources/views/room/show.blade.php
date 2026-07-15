@@ -16,6 +16,7 @@
         @if(Auth::user()->role === 'tenant')
         <div class="mt-3">
             <a href="{{ route('booking.create', ['room_id' => $room->id]) }}" class="btn btn-success">Pesan Kamar Ini</a>
+            <a href="{{ route('complaint.create', ['room_id' => $room->id]) }}" class="btn btn-warning">Ajukan Komplain</a>
         </div>
         @endif
     </div>

@@ -39,4 +39,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(Booking::class, 'tenant_id');
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'tenant_id');
+    }
+
+    public function complaints()
+    {
+        return $this->hasMany(Complaint::class, 'tenant_id');
+    }
+
+    public function wishlists()
+    {
+        return $this->hasMany(Wishlist::class, 'tenant_id');
+    }
 }
