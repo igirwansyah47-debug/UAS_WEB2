@@ -2,48 +2,42 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\User;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $users = [
-            [
-                'name' => 'Tamus Tahir',
-                'email' => 'tamus@gmail.com',
-                'role' => 'superadmin',
-                'phone' => '081234567890',
-            ],
-            [
-                'name' => 'Owner Satu',
-                'email' => 'owner@gmail.com',
-                'role' => 'owner',
-                'phone' => '081234567891',
-            ],
-            [
-                'name' => 'Tenant Satu',
-                'email' => 'tenant@gmail.com',
+        // 1 Superadmin
+        User::create([
+            'name' => 'Superadmin',
+            'email' => 'superadmin@gmail.com',
+            'password' => bcrypt('password'),
+            'role' => 'superadmin',
+            'phone' => '081234567890',
+            'ktp_number' => '3201010101010001',
+        ]);
+
+        // 1 Owner
+        User::create([
+            'name' => 'Owner Kos',
+            'email' => 'owner@gmail.com',
+            'password' => bcrypt('password'),
+            'role' => 'owner',
+            'phone' => '081234567891',
+            'ktp_number' => '3201010101010002',
+        ]);
+
+        // 5 Tenants
+        for ($i = 1; $i <= 5; $i++) {
+            User::create([
+                'name' => 'Tenant ' . $i,
+                'email' => ($i == 1) ? 'tenant@gmail.com' : 'tenant' . $i . '@gmail.com',
+                'password' => bcrypt('password'),
                 'role' => 'tenant',
-                'phone' => '081234567892',
-            ],
-        ];
-
-        foreach ($users as $user) {
-            if (User::where('email', $user['email'])->exists()) {
-                continue;
-            }
-
-            User::factory()->create([
-                'name' => $user['name'],
-                'email' => $user['email'],
-                'role' => $user['role'],
-                'phone' => $user['phone'],
+                'phone' => '08123456780' . $i,
+                'ktp_number' => '320101010101000' . ($i + 2),
             ]);
         }
     }

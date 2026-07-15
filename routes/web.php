@@ -37,6 +37,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/wishlist', [App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index')->middleware('role:tenant');
     Route::post('/wishlist/toggle', [App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle')->middleware('role:tenant');
 
+    Route::get('/tenant-management', [App\Http\Controllers\TenantManagementController::class, 'index'])->name('tenant_management.index')->middleware('role:owner');
+    Route::get('/tenant-management/{id}', [App\Http\Controllers\TenantManagementController::class, 'show'])->name('tenant_management.show')->middleware('role:owner');
+    Route::post('/tenant-management/{booking}/complete', [App\Http\Controllers\TenantManagementController::class, 'completeBooking'])->name('tenant_management.completeBooking')->middleware('role:owner');
+
     Route::get('/setting', [SettingController::class, 'index'])->name('setting.index');
     Route::put('/setting/{setting}/update', [SettingController::class, 'update'])->name('setting.update');
 });

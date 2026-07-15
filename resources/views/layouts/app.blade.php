@@ -319,6 +319,16 @@
                 </li>
             @endif
 
+            @if(Auth::user()->role === 'owner')
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('tenant_management.*') ? '' : 'collapsed' }}"
+                    href="{{ route('tenant_management.index') }}">
+                    <i class='bx bx-user-circle'></i>
+                    <span>Manajemen Penghuni</span>
+                </a>
+            </li>
+            @endif
+
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('booking.*') ? '' : 'collapsed' }}"
                     href="{{ route('booking.index') }}">
