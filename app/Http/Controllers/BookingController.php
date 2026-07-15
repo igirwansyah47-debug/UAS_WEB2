@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Models\Payment;
+use App\Notifications\BookingCreatedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -79,14 +80,49 @@ class BookingController extends Controller
                 'status' => 'pending',
             ]);
 
+            // Generate Midtrans Snap Token
+            $snapToken = null;
+            try {
+                \Midtrans\Config::$serverKey = config('midtrans.server_key');
+                \Midtrans\Config::$isProduction = config('midtrans.is_production');
+                \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
+                \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
+
+                $params = [
+                    'transaction_details' => [
+                        'order_id' => 'BOOKING-' . $booking->id . '-' . time(),
+                        'gross_amount' => (int) $totalPrice,
+                    ],
+                    'customer_details' => [
+                        'first_name' => Auth::user()->name,
+                        'email' => Auth::user()->email,
+                    ],
+                ];
+
+                $snapToken = \Midtrans\Snap::getSnapToken($params);
+            } catch (\Exception $e) {
+                // Jika Midtrans gagal (mis: sandbox key belum valid), lanjutkan tanpa snap token
+                $snapToken = null;
+            }
+
             Payment::create([
                 'booking_id' => $booking->id,
                 'amount' => $totalPrice,
                 'status' => 'unpaid',
+                'transaction_id' => 'BOOKING-' . $booking->id . '-' . time(),
+                'payment_method' => 'midtrans_snap',
             ]);
 
+            // Update snap_token di booking (simpan untuk digunakan di halaman pembayaran)
+            $booking->update(['snap_token' => $snapToken]);
+
             DB::commit();
-            return redirect()->route('booking.index')->with('success', 'Booking berhasil dibuat. Silakan lakukan pembayaran.');
+
+            // Kirim notifikasi email (queued)
+            $booking->load('room.property');
+            Auth::user()->notify(new BookingCreatedNotification($booking));
+
+            return redirect()->route('booking.show', $booking)->with('success', 'Booking berhasil dibuat. Silakan lakukan pembayaran.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal membuat booking: ' . $e->getMessage());
@@ -95,6 +131,8 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
+        $booking->load(['room.property', 'tenant', 'payment']);
+        
         return view('booking.show', [
             'title' => 'Detail Booking',
             'booking' => $booking,
@@ -125,6 +163,11 @@ class BookingController extends Controller
             }
 
             DB::commit();
+
+            // Kirim notifikasi pembayaran sukses
+            $booking->load('room.property');
+            $booking->tenant->notify(new \App\Notifications\PaymentSuccessNotification($booking->payment));
+
             return redirect()->route('booking.index')->with('success', 'Pembayaran berhasil dikonfirmasi dan stok kamar telah dikurangi.');
         } catch (\Exception $e) {
             DB::rollBack();

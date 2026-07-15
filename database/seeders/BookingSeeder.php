@@ -18,12 +18,7 @@ class BookingSeeder extends Seeder
 
         if ($tenants->count() >= 5 && $rooms->count() >= 2) {
             
-            // Assign some historical/completed bookings to different tenants
             foreach ($tenants as $index => $tenant) {
-                // Tenant 1 & 2 have active bookings
-                // Tenant 3 & 4 have completed bookings
-                // Tenant 5 has pending booking
-
                 if ($index < 2) {
                     // Active Bookings
                     $room = $rooms->random();
@@ -47,6 +42,8 @@ class BookingSeeder extends Seeder
                         'amount' => $totalPrice,
                         'status' => 'paid',
                         'payment_date' => Carbon::now()->subDays(1),
+                        'transaction_id' => 'TRX-' . strtoupper(uniqid()),
+                        'payment_method' => 'midtrans_snap',
                     ]);
                     
                     if ($room->available_stock > 0) {
@@ -77,6 +74,8 @@ class BookingSeeder extends Seeder
                         'amount' => $totalPrice,
                         'status' => 'paid',
                         'payment_date' => $pastDate->copy()->addDays(1),
+                        'transaction_id' => 'TRX-' . strtoupper(uniqid()),
+                        'payment_method' => 'midtrans_snap',
                         'created_at' => $pastDate,
                         'updated_at' => $pastDate->copy()->addDays(1),
                     ]);
@@ -102,11 +101,13 @@ class BookingSeeder extends Seeder
                         'booking_id' => $booking->id,
                         'amount' => $totalPrice,
                         'status' => 'unpaid',
+                        'transaction_id' => 'BOOKING-' . $booking->id . '-' . time(),
+                        'payment_method' => 'midtrans_snap',
                     ]);
                 }
             }
 
-            // Generate some random historical payments for charts
+            // Generate historical payments for charts
             for ($i = 1; $i <= 5; $i++) {
                 $pastDate = Carbon::now()->subMonths($i);
                 $room = $rooms->random();
@@ -132,6 +133,8 @@ class BookingSeeder extends Seeder
                     'amount' => $totalPrice,
                     'status' => 'paid',
                     'payment_date' => $pastDate->copy()->addDays(rand(0, 3)),
+                    'transaction_id' => 'TRX-' . strtoupper(uniqid()),
+                    'payment_method' => 'midtrans_snap',
                     'created_at' => $pastDate,
                     'updated_at' => $pastDate->copy()->addDays(rand(0, 3)),
                 ]);

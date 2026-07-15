@@ -15,6 +15,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/authenticate', [LoginController::class, 'authenticate'])->name('login.authenticate');
 });
 
+// Midtrans Payment Callback (No Auth Required)
+Route::post('/payment/callback', [App\Http\Controllers\PaymentCallbackController::class, 'handle'])->name('payment.callback');
+
 Route::middleware('auth')->group(function () {
     Route::get('/logout', [LoginController::class, 'logout'])->name('login.logout');
     Route::post('/switch-user', [LoginController::class, 'switchUser'])->name('login.switch_user');
@@ -25,8 +28,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/dashboard/update', [DashboardController::class, 'update'])->name('dashboard.update');
 
     Route::resource('/user', UserController::class)->middleware('role:superadmin');
-    Route::resource('/property', App\Http\Controllers\PropertyController::class)->middleware('role:superadmin,owner');
-    Route::resource('/room', App\Http\Controllers\RoomController::class)->middleware('role:superadmin,owner');
+    Route::resource('/property', App\Http\Controllers\PropertyController::class)->middleware('role:superadmin,owner,tenant');
+    Route::resource('/room', App\Http\Controllers\RoomController::class)->middleware('role:superadmin,owner,tenant');
     Route::resource('/facility', App\Http\Controllers\FacilityController::class)->middleware('role:superadmin');
     
     Route::resource('/booking', App\Http\Controllers\BookingController::class)->only(['index', 'create', 'store', 'show'])->middleware('role:superadmin,owner,tenant');

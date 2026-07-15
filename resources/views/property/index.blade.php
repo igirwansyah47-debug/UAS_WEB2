@@ -1,9 +1,11 @@
 <x-app>
     <x-slot:title>{{ $title }}</x-slot:title>
     <div class="card shadow-lg p-3">
+        @if(in_array(Auth::user()->role, ['superadmin', 'owner']))
         <div class="mb-3">
             <a class="btn btn-primary" href="{{ route('property.create') }}">Tambah</a>
         </div>
+        @endif
         <div class="table-responsive">
             <table class="table table-bordered table-striped w-100">
                 <thead>
@@ -32,11 +34,13 @@
                         </td>
                         <td>
                             <a href="{{ route('property.show', $property) }}" class="btn btn-info btn-sm">Show</a>
+                            @if(in_array(Auth::user()->role, ['superadmin', 'owner']))
                             <a href="{{ route('property.edit', $property) }}" class="btn btn-warning btn-sm">Edit</a>
                             <form action="{{ route('property.destroy', $property) }}" method="post" class="d-inline">
                                 @csrf @method('delete')
                                 <button class="btn btn-danger btn-sm" onclick="return confirm('Hapus?')">Hapus</button>
                             </form>
+                            @endif
                         </td>
                     </tr>
                     @endforeach

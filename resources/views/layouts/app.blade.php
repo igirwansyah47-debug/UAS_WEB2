@@ -308,15 +308,15 @@
                 </li>
             @endif
 
-            @if (in_array(Auth::user()->role, ['superadmin', 'owner']))
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('property.*') ? '' : 'collapsed' }}"
-                        href="{{ route('property.index') }}">
-                        <i class='bx bx-building-house'></i>
-                        <span>Properti Kos</span>
-                    </a>
-                </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('property.*') ? '' : 'collapsed' }}"
+                    href="{{ route('property.index') }}">
+                    <i class='bx bx-building-house'></i>
+                    <span>{{ Auth::user()->role === 'tenant' ? 'Cari Kos' : 'Properti Kos' }}</span>
+                </a>
+            </li>
 
+            @if (in_array(Auth::user()->role, ['superadmin', 'owner']))
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('room.*') ? '' : 'collapsed' }}"
                         href="{{ route('room.index') }}">
