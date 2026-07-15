@@ -34,12 +34,18 @@ Route::middleware('auth')->group(function () {
     
     Route::resource('/booking', App\Http\Controllers\BookingController::class)->only(['index', 'create', 'store', 'show'])->middleware('role:superadmin,owner,tenant');
     Route::post('/booking/{booking}/mark-as-paid', [App\Http\Controllers\BookingController::class, 'markAsPaid'])->name('booking.markAsPaid')->middleware('role:superadmin,owner');
+    Route::post('/booking/{booking}/renew', [App\Http\Controllers\BookingController::class, 'renew'])->name('booking.renew')->middleware('role:tenant');
 
     Route::post('/review', [App\Http\Controllers\ReviewController::class, 'store'])->name('review.store')->middleware('role:tenant');
     Route::resource('/complaint', App\Http\Controllers\ComplaintController::class)->only(['index', 'create', 'store', 'show', 'update'])->middleware('role:superadmin,owner,tenant');
     Route::get('/wishlist', [App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index')->middleware('role:tenant');
+    Route::post('/wishlist', [App\Http\Controllers\WishlistController::class, 'store'])->name('wishlist.store')->middleware('role:tenant');
+    Route::delete('/wishlist/{wishlist}', [App\Http\Controllers\WishlistController::class, 'destroy'])->name('wishlist.destroy')->middleware('role:tenant');
     Route::post('/wishlist/toggle', [App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle')->middleware('role:tenant');
-
+    
+    Route::post('/extra-bill', [App\Http\Controllers\ExtraBillController::class, 'store'])->name('extra_bill.store')->middleware('role:superadmin,owner');
+    Route::post('/extra-bill/{extraBill}/pay', [App\Http\Controllers\ExtraBillController::class, 'pay'])->name('extra_bill.pay')->middleware('role:tenant');
+    
     Route::get('/tenant-management', [App\Http\Controllers\TenantManagementController::class, 'index'])->name('tenant_management.index')->middleware('role:owner');
     Route::get('/tenant-management/{id}', [App\Http\Controllers\TenantManagementController::class, 'show'])->name('tenant_management.show')->middleware('role:owner');
     Route::post('/tenant-management/{booking}/complete', [App\Http\Controllers\TenantManagementController::class, 'completeBooking'])->name('tenant_management.completeBooking')->middleware('role:owner');

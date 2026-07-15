@@ -16,6 +16,7 @@ class RoomSeeder extends Seeder
                 'room_type' => 'Standard',
             ], [
                 'price' => 1000000,
+                'security_deposit' => 300000,
                 'quantity' => 10,
                 'available_stock' => 10,
             ]);
@@ -25,6 +26,7 @@ class RoomSeeder extends Seeder
                 'room_type' => 'VIP',
             ], [
                 'price' => 1500000,
+                'security_deposit' => 500000,
                 'quantity' => 5,
                 'available_stock' => 5,
             ]);

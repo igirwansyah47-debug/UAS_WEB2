@@ -30,49 +30,65 @@ class PaymentCallbackController extends Controller
             $transactionStatus = $request->transaction_status;
             $paymentType = $request->payment_type;
 
-            // Extract booking ID from order_id format: BOOKING-{id}-{timestamp}
+            // Extract booking ID from order_id format: BOOKING-{id}-{timestamp} or EXTRABILL-{id}-{timestamp}
             $parts = explode('-', $orderId);
-            $bookingId = $parts[1] ?? null;
+            $type = $parts[0] ?? null;
+            $id = $parts[1] ?? null;
 
-            if (!$bookingId) {
+            if (!$id || !in_array($type, ['BOOKING', 'EXTRABILL'])) {
                 return response()->json(['message' => 'Invalid order ID'], 400);
-            }
-
-            $booking = Booking::find($bookingId);
-            if (!$booking) {
-                return response()->json(['message' => 'Booking not found'], 404);
-            }
-
-            $payment = $booking->payment;
-            if (!$payment) {
-                return response()->json(['message' => 'Payment not found'], 404);
             }
 
             DB::beginTransaction();
             try {
-                if ($transactionStatus === 'capture' || $transactionStatus === 'settlement') {
-                    $payment->update([
-                        'status' => 'paid',
-                        'payment_date' => now(),
-                        'transaction_id' => $orderId,
-                        'payment_method' => $paymentType ?? 'midtrans',
-                    ]);
+                if ($type === 'BOOKING') {
+                    $booking = Booking::find($id);
+                    if (!$booking || !$booking->payment) {
+                        return response()->json(['message' => 'Booking or Payment not found'], 404);
+                    }
+                    $payment = $booking->payment;
 
-                    $booking->update(['status' => 'active']);
+                    if ($transactionStatus === 'capture' || $transactionStatus === 'settlement') {
+                        $payment->update([
+                            'status' => 'paid',
+                            'payment_date' => now(),
+                            'transaction_id' => $orderId,
+                            'payment_method' => $paymentType ?? 'midtrans',
+                        ]);
 
-                    $room = $booking->room;
-                    if ($room->available_stock > 0) {
-                        $room->decrement('available_stock');
+                        $booking->update(['status' => 'active']);
+
+                        $room = $booking->room;
+                        if ($room->available_stock > 0) {
+                            $room->decrement('available_stock');
+                        }
+
+                        // Kirim notifikasi pembayaran sukses
+                        $booking->load('room.property');
+                        $booking->tenant->notify(new PaymentSuccessNotification($payment));
+
+                        Log::info("Midtrans callback: Payment SUCCESS for booking #{$id}");
+                    } elseif (in_array($transactionStatus, ['deny', 'cancel', 'expire'])) {
+                        $payment->update(['status' => 'failed']);
+                        Log::info("Midtrans callback: Payment FAILED for booking #{$id}, status: {$transactionStatus}");
+                    }
+                } elseif ($type === 'EXTRABILL') {
+                    $extraBill = \App\Models\ExtraBill::find($id);
+                    if (!$extraBill) {
+                        return response()->json(['message' => 'Extra Bill not found'], 404);
                     }
 
-                    // Kirim notifikasi pembayaran sukses
-                    $booking->load('room.property');
-                    $booking->tenant->notify(new PaymentSuccessNotification($payment));
-
-                    Log::info("Midtrans callback: Payment SUCCESS for booking #{$bookingId}");
-                } elseif (in_array($transactionStatus, ['deny', 'cancel', 'expire'])) {
-                    $payment->update(['status' => 'failed']);
-                    Log::info("Midtrans callback: Payment FAILED for booking #{$bookingId}, status: {$transactionStatus}");
+                    if ($transactionStatus === 'capture' || $transactionStatus === 'settlement') {
+                        $extraBill->update([
+                            'status' => 'paid',
+                            'payment_date' => now(),
+                            'transaction_id' => $orderId,
+                        ]);
+                        Log::info("Midtrans callback: Payment SUCCESS for extra bill #{$id}");
+                    } elseif (in_array($transactionStatus, ['deny', 'cancel', 'expire'])) {
+                        $extraBill->update(['status' => 'failed']);
+                        Log::info("Midtrans callback: Payment FAILED for extra bill #{$id}, status: {$transactionStatus}");
+                    }
                 }
 
                 DB::commit();

@@ -25,7 +25,8 @@ class BookingSeeder extends Seeder
                     $startDate = Carbon::now();
                     $duration = rand(3, 6);
                     $endDate = $startDate->copy()->addMonths($duration);
-                    $totalPrice = $room->price * $duration;
+                    $securityDeposit = $room->security_deposit ?? 0;
+                    $totalPrice = ($room->price * $duration) + $securityDeposit;
 
                     $booking = Booking::create([
                         'tenant_id' => $tenant->id,
@@ -34,7 +35,15 @@ class BookingSeeder extends Seeder
                         'end_date' => $endDate,
                         'duration_months' => $duration,
                         'total_price' => $totalPrice,
+                        'security_deposit' => $securityDeposit,
                         'status' => 'active',
+                    ]);
+
+                    \App\Models\ExtraBill::create([
+                        'booking_id' => $booking->id,
+                        'title' => 'Tagihan Listrik Bulan Ini',
+                        'amount' => 150000,
+                        'status' => 'unpaid',
                     ]);
 
                     Payment::create([
@@ -55,7 +64,8 @@ class BookingSeeder extends Seeder
                     $room = $rooms->random();
                     $duration = rand(1, 3);
                     $endDate = $pastDate->copy()->addMonths($duration);
-                    $totalPrice = $room->price * $duration;
+                    $securityDeposit = $room->security_deposit ?? 0;
+                    $totalPrice = ($room->price * $duration) + $securityDeposit;
 
                     $booking = Booking::create([
                         'tenant_id' => $tenant->id,
@@ -64,6 +74,8 @@ class BookingSeeder extends Seeder
                         'end_date' => $endDate,
                         'duration_months' => $duration,
                         'total_price' => $totalPrice,
+                        'security_deposit' => $securityDeposit,
+                        'is_deposit_returned' => true,
                         'status' => 'completed',
                         'created_at' => $pastDate,
                         'updated_at' => $endDate,
@@ -85,7 +97,8 @@ class BookingSeeder extends Seeder
                     $startDate = Carbon::now()->addDays(2);
                     $duration = 3;
                     $endDate = $startDate->copy()->addMonths($duration);
-                    $totalPrice = $room->price * $duration;
+                    $securityDeposit = $room->security_deposit ?? 0;
+                    $totalPrice = ($room->price * $duration) + $securityDeposit;
 
                     $booking = Booking::create([
                         'tenant_id' => $tenant->id,
@@ -94,6 +107,7 @@ class BookingSeeder extends Seeder
                         'end_date' => $endDate,
                         'duration_months' => $duration,
                         'total_price' => $totalPrice,
+                        'security_deposit' => $securityDeposit,
                         'status' => 'pending',
                     ]);
 
@@ -114,7 +128,8 @@ class BookingSeeder extends Seeder
                 $tenant = $tenants->random();
                 $duration = 1;
                 $endDate = $pastDate->copy()->addMonths($duration);
-                $totalPrice = $room->price * $duration;
+                $securityDeposit = $room->security_deposit ?? 0;
+                $totalPrice = ($room->price * $duration) + $securityDeposit;
 
                 $booking = Booking::create([
                     'tenant_id' => $tenant->id,
@@ -123,6 +138,8 @@ class BookingSeeder extends Seeder
                     'end_date' => $endDate,
                     'duration_months' => $duration,
                     'total_price' => $totalPrice,
+                    'security_deposit' => $securityDeposit,
+                    'is_deposit_returned' => true,
                     'status' => 'completed',
                     'created_at' => $pastDate,
                     'updated_at' => $endDate,

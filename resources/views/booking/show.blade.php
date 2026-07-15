@@ -5,7 +5,11 @@
         <p><strong>Tenant:</strong> {{ $booking->tenant->name }}</p>
         <p><strong>Kamar:</strong> {{ $booking->room->property->name }} - {{ $booking->room->room_type }}</p>
         <p><strong>Durasi:</strong> {{ $booking->duration_months }} bulan ({{ $booking->start_date }} s/d {{ $booking->end_date }})</p>
-        <p><strong>Total Tagihan:</strong> Rp {{ number_format($booking->total_price, 0, ',', '.') }}</p>
+        <p><strong>Total Tagihan:</strong> Rp {{ number_format($booking->total_price, 0, ',', '.') }}
+            @if($booking->security_deposit > 0)
+                <br><small class="text-muted">(Termasuk Uang Jaminan / Deposit: Rp {{ number_format($booking->security_deposit, 0, ',', '.') }})</small>
+            @endif
+        </p>
         <p><strong>Status Booking:</strong> 
             @if($booking->status === 'active') <span class="badge bg-success">Aktif</span>
             @elseif($booking->status === 'pending') <span class="badge bg-warning">Pending</span>
@@ -36,6 +40,59 @@
         <hr>
         <button id="pay-button" class="btn btn-primary btn-lg"><i class="bx bx-credit-card"></i> Bayar Sekarang via Midtrans</button>
         @endif
+        
+        {{-- Tombol Perpanjang Sewa (Tenant) --}}
+        @if(Auth::user()->role === 'tenant' && $booking->status === 'active')
+        <hr>
+        <h5>Perpanjang Sewa</h5>
+        <form action="{{ route('booking.renew', $booking) }}" method="post" class="d-flex align-items-center gap-2">
+            @csrf
+            <input type="number" name="duration_months" class="form-control w-25" min="1" value="1" required>
+            <span>Bulan</span>
+            <button class="btn btn-outline-success">Perpanjang</button>
+        </form>
+        @endif
+
+        {{-- Tagihan Tambahan --}}
+        @if($booking->extraBills->count() > 0)
+        <hr>
+        <h5>Tagihan Tambahan</h5>
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                    <th>Deskripsi</th>
+                    <th>Jumlah</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($booking->extraBills as $bill)
+                <tr>
+                    <td>{{ $bill->title }}</td>
+                    <td>Rp {{ number_format($bill->amount, 0, ',', '.') }}</td>
+                    <td>
+                        @if($bill->status === 'paid') <span class="badge bg-success">Lunas</span>
+                        @else <span class="badge bg-danger">Belum Lunas</span>
+                        @endif
+                    </td>
+                    <td>
+                        @if(Auth::user()->role === 'tenant' && $bill->status === 'unpaid')
+                            @if($bill->snap_token)
+                                <button class="btn btn-sm btn-primary pay-extra-bill" data-token="{{ $bill->snap_token }}">Bayar</button>
+                            @else
+                                <form action="{{ route('extra_bill.pay', $bill) }}" method="post">
+                                    @csrf
+                                    <button class="btn btn-sm btn-primary">Proses Bayar</button>
+                                </form>
+                            @endif
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @endif
 
         {{-- Tombol Manual Confirm (Owner/Superadmin) --}}
         @if(in_array(Auth::user()->role, ['owner', 'superadmin']) && $booking->status === 'pending')
@@ -48,24 +105,46 @@
     </div>
 
     @push('scripts')
-    @if(Auth::user()->role === 'tenant' && $booking->payment->status === 'unpaid' && $booking->snap_token)
+    @if(Auth::user()->role === 'tenant')
     <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
     <script>
-        document.getElementById('pay-button').addEventListener('click', function () {
-            snap.pay('{{ $booking->snap_token }}', {
-                onSuccess: function(result) {
-                    alert("Pembayaran berhasil!");
-                    window.location.reload();
-                },
-                onPending: function(result) {
-                    alert("Menunggu pembayaran Anda...");
-                },
-                onError: function(result) {
-                    alert("Pembayaran gagal!");
-                },
-                onClose: function() {
-                    console.log('Popup pembayaran ditutup.');
-                }
+        const payButton = document.getElementById('pay-button');
+        if (payButton) {
+            payButton.addEventListener('click', function () {
+                snap.pay('{{ $booking->snap_token }}', {
+                    onSuccess: function(result) {
+                        alert("Pembayaran berhasil!");
+                        window.location.reload();
+                    },
+                    onPending: function(result) {
+                        alert("Menunggu pembayaran Anda...");
+                    },
+                    onError: function(result) {
+                        alert("Pembayaran gagal!");
+                    },
+                    onClose: function() {
+                        console.log('Popup pembayaran ditutup.');
+                    }
+                });
+            });
+        }
+        
+        const extraBillButtons = document.querySelectorAll('.pay-extra-bill');
+        extraBillButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const token = this.getAttribute('data-token');
+                snap.pay(token, {
+                    onSuccess: function(result) {
+                        alert("Pembayaran berhasil!");
+                        window.location.reload();
+                    },
+                    onPending: function(result) {
+                        alert("Menunggu pembayaran Anda...");
+                    },
+                    onError: function(result) {
+                        alert("Pembayaran gagal!");
+                    }
+                });
             });
         });
     </script>

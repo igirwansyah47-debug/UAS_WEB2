@@ -13,6 +13,10 @@
             </div>
             <div class="mb-3"><label>Type</label><input type="text" name="room_type" value="{{ $room->room_type }}" class="form-control" required></div>
             <div class="mb-3"><label>Price</label><input type="number" name="price" value="{{ $room->price }}" class="form-control" required></div>
+            <div class="mb-3">
+                <label>Security Deposit <small class="text-muted">- Optional</small></label>
+                <input type="number" name="security_deposit" class="form-control" value="{{ $room->security_deposit }}" min="0">
+            </div>
             <div class="mb-3"><label>Quantity</label><input type="number" name="quantity" value="{{ $room->quantity }}" class="form-control" required></div>
             <div class="mb-3"><label>Available Stock</label><input type="number" name="available_stock" value="{{ $room->available_stock }}" class="form-control" required></div>
             <div class="mb-3"><label>Image</label><input type="file" name="image" class="form-control"></div>

@@ -67,7 +67,7 @@ class TenantManagementController extends Controller
         ]);
     }
 
-    public function completeBooking(Booking $booking)
+    public function completeBooking(Request $request, Booking $booking)
     {
         if (Auth::user()->role !== 'owner') {
             abort(403);
@@ -78,9 +78,20 @@ class TenantManagementController extends Controller
         }
 
         if ($booking->status === 'active') {
-            $booking->update(['status' => 'completed']);
+            $isDepositReturned = $request->has('return_deposit') ? true : false;
+            
+            $booking->update([
+                'status' => 'completed',
+                'is_deposit_returned' => $isDepositReturned,
+            ]);
+            
             $booking->room->increment('available_stock');
-            return redirect()->back()->with('success', 'Status sewa telah diubah menjadi Selesai dan stok kamar dikembalikan.');
+            
+            $message = 'Status sewa telah diubah menjadi Selesai dan stok kamar dikembalikan.';
+            if ($isDepositReturned) {
+                $message .= ' Uang Jaminan (Deposit) telah ditandai sebagai dikembalikan.';
+            }
+            return redirect()->back()->with('success', $message);
         }
 
         return redirect()->back()->with('error', 'Booking tidak aktif.');

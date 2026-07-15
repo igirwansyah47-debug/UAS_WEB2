@@ -66,7 +66,9 @@ class BookingController extends Controller
 
         $startDate = Carbon::parse($request->start_date);
         $endDate = $startDate->copy()->addMonths($request->duration_months);
-        $totalPrice = $room->price * $request->duration_months;
+        
+        $securityDeposit = $room->security_deposit ?? 0;
+        $totalPrice = ($room->price * $request->duration_months) + $securityDeposit;
 
         DB::beginTransaction();
         try {
@@ -77,6 +79,7 @@ class BookingController extends Controller
                 'end_date' => $endDate,
                 'duration_months' => $request->duration_months,
                 'total_price' => $totalPrice,
+                'security_deposit' => $securityDeposit,
                 'status' => 'pending',
             ]);
 
@@ -172,6 +175,87 @@ class BookingController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal memproses pembayaran: ' . $e->getMessage());
+        }
+    }
+
+    public function renew(Request $request, Booking $booking)
+    {
+        if (Auth::user()->role !== 'tenant' || $booking->tenant_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if ($booking->status !== 'active') {
+            return redirect()->back()->with('error', 'Hanya booking aktif yang dapat diperpanjang.');
+        }
+
+        $request->validate([
+            'duration_months' => 'required|integer|min:1',
+        ]);
+
+        $room = $booking->room;
+        
+        // Mulai perpanjangan tepat setelah end_date dari booking sebelumnya
+        $startDate = Carbon::parse($booking->end_date);
+        $endDate = $startDate->copy()->addMonths($request->duration_months);
+        
+        // Tidak perlu bayar security deposit lagi saat perpanjangan
+        $totalPrice = $room->price * $request->duration_months;
+
+        DB::beginTransaction();
+        try {
+            $newBooking = Booking::create([
+                'tenant_id' => Auth::id(),
+                'room_id' => $room->id,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'duration_months' => $request->duration_months,
+                'total_price' => $totalPrice,
+                'security_deposit' => 0, // Deposit sudah di-hold di booking awal
+                'status' => 'pending',
+            ]);
+
+            // Generate Midtrans Snap Token for renewal
+            $snapToken = null;
+            try {
+                \Midtrans\Config::$serverKey = config('midtrans.server_key');
+                \Midtrans\Config::$isProduction = config('midtrans.is_production');
+                \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
+                \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
+
+                $params = [
+                    'transaction_details' => [
+                        'order_id' => 'BOOKING-' . $newBooking->id . '-' . time(),
+                        'gross_amount' => (int) $totalPrice,
+                    ],
+                    'customer_details' => [
+                        'first_name' => Auth::user()->name,
+                        'email' => Auth::user()->email,
+                    ],
+                ];
+
+                $snapToken = \Midtrans\Snap::getSnapToken($params);
+            } catch (\Exception $e) {
+                $snapToken = null;
+            }
+
+            Payment::create([
+                'booking_id' => $newBooking->id,
+                'amount' => $totalPrice,
+                'status' => 'unpaid',
+                'transaction_id' => 'BOOKING-' . $newBooking->id . '-' . time(),
+                'payment_method' => 'midtrans_snap',
+            ]);
+
+            $newBooking->update(['snap_token' => $snapToken]);
+
+            DB::commit();
+
+            // Notifikasi juga bisa dipanggil di sini jika diperlukan
+
+            return redirect()->route('booking.show', $newBooking)->with('success', 'Perpanjangan sewa berhasil dibuat. Silakan lakukan pembayaran.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal memperpanjang sewa: ' . $e->getMessage());
         }
     }
 }
