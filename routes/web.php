@@ -41,6 +41,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/tenant-management/{id}', [App\Http\Controllers\TenantManagementController::class, 'show'])->name('tenant_management.show')->middleware('role:owner');
     Route::post('/tenant-management/{booking}/complete', [App\Http\Controllers\TenantManagementController::class, 'completeBooking'])->name('tenant_management.completeBooking')->middleware('role:owner');
 
+    Route::get('/verification', [App\Http\Controllers\VerificationController::class, 'index'])->name('verification.index')->middleware('role:superadmin');
+    Route::post('/verification/{property}/approve', [App\Http\Controllers\VerificationController::class, 'approve'])->name('verification.approve')->middleware('role:superadmin');
+    Route::post('/verification/{property}/reject', [App\Http\Controllers\VerificationController::class, 'reject'])->name('verification.reject')->middleware('role:superadmin');
+
     Route::get('/setting', [SettingController::class, 'index'])->name('setting.index');
     Route::put('/setting/{setting}/update', [SettingController::class, 'update'])->name('setting.update');
 });

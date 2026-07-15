@@ -12,6 +12,7 @@
                         <th>Name</th>
                         <th>City</th>
                         <th>Address</th>
+                        <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -22,6 +23,13 @@
                         <td>{{ $property->name }}</td>
                         <td>{{ $property->city }}</td>
                         <td>{{ $property->address }}</td>
+                        <td>
+                            @if($property->is_verified)
+                                <span class="badge bg-success">Terverifikasi</span>
+                            @else
+                                <span class="badge bg-warning text-dark">Belum</span>
+                            @endif
+                        </td>
                         <td>
                             <a href="{{ route('property.show', $property) }}" class="btn btn-info btn-sm">Show</a>
                             <a href="{{ route('property.edit', $property) }}" class="btn btn-warning btn-sm">Edit</a>

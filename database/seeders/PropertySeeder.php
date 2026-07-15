@@ -17,6 +17,17 @@ class PropertySeeder extends Seeder
                 'description' => 'Kos nyaman dan aman untuk mahasiswa dan karyawan.',
                 'address' => 'Jl. Mawar No. 123',
                 'city' => 'Jakarta',
+                'is_verified' => true,
+            ]);
+
+            Property::firstOrCreate([
+                'name' => 'Kos Melati Indah',
+            ], [
+                'owner_id' => $owner->id,
+                'description' => 'Kos baru dengan fasilitas lengkap, menunggu verifikasi admin.',
+                'address' => 'Jl. Melati No. 45',
+                'city' => 'Bandung',
+                'is_verified' => false,
             ]);
         }
     }

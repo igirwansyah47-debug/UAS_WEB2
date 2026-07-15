@@ -15,6 +15,8 @@ class PropertyController extends Controller
         $query = Property::query();
         if (Auth::user()->role === 'owner') {
             $query->where('owner_id', Auth::id());
+        } elseif (Auth::user()->role === 'tenant') {
+            $query->where('is_verified', true);
         }
         $properties = $query->latest()->get();
 
@@ -60,6 +62,9 @@ class PropertyController extends Controller
     {
         if (Auth::user()->role === 'owner' && $property->owner_id !== Auth::id()) {
             abort(403);
+        }
+        if (Auth::user()->role === 'tenant' && !$property->is_verified) {
+            abort(403, 'Properti ini belum terverifikasi.');
         }
         return view('property.show', [
             'title' => 'Detail Properti',

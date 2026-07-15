@@ -299,6 +299,13 @@
                         <span>Master Fasilitas</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('verification.*') ? '' : 'collapsed' }}"
+                        href="{{ route('verification.index') }}">
+                        <i class='bx bx-check-shield'></i>
+                        <span>Verifikasi Properti</span>
+                    </a>
+                </li>
             @endif
 
             @if (in_array(Auth::user()->role, ['superadmin', 'owner']))
