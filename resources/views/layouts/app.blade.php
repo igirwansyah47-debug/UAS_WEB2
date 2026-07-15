@@ -284,12 +284,37 @@
                 </a>
             </li>
 
-            @if (Auth::user()->role == 'Superadmin')
+            @if (Auth::user()->role == 'superadmin')
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('user.*') ? '' : 'collapsed' }}"
                         href="{{ route('user.index') }}">
                         <i class='bx bx-user-pin'></i>
                         <span>User</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('facility.*') ? '' : 'collapsed' }}"
+                        href="{{ route('facility.index') }}">
+                        <i class='bx bx-list-ul'></i>
+                        <span>Master Fasilitas</span>
+                    </a>
+                </li>
+            @endif
+
+            @if (in_array(Auth::user()->role, ['superadmin', 'owner']))
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('property.*') ? '' : 'collapsed' }}"
+                        href="{{ route('property.index') }}">
+                        <i class='bx bx-building-house'></i>
+                        <span>Properti Kos</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('room.*') ? '' : 'collapsed' }}"
+                        href="{{ route('room.index') }}">
+                        <i class='bx bx-bed'></i>
+                        <span>Kamar</span>
                     </a>
                 </li>
             @endif
