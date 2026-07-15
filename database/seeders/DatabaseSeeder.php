@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             FacilitySeeder::class,
             PropertySeeder::class,
             RoomSeeder::class,
+            BookingSeeder::class,
         ]);
     }
 }

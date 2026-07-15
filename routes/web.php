@@ -28,6 +28,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('/property', App\Http\Controllers\PropertyController::class)->middleware('role:superadmin,owner');
     Route::resource('/room', App\Http\Controllers\RoomController::class)->middleware('role:superadmin,owner');
     Route::resource('/facility', App\Http\Controllers\FacilityController::class)->middleware('role:superadmin');
+    
+    Route::resource('/booking', App\Http\Controllers\BookingController::class)->only(['index', 'create', 'store', 'show'])->middleware('role:superadmin,owner,tenant');
+    Route::post('/booking/{booking}/mark-as-paid', [App\Http\Controllers\BookingController::class, 'markAsPaid'])->name('booking.markAsPaid')->middleware('role:superadmin,owner');
 
     Route::get('/setting', [SettingController::class, 'index'])->name('setting.index');
     Route::put('/setting/{setting}/update', [SettingController::class, 'update'])->name('setting.update');

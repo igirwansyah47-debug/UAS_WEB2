@@ -319,6 +319,13 @@
                 </li>
             @endif
 
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('booking.*') ? '' : 'collapsed' }}"
+                    href="{{ route('booking.index') }}">
+                    <i class='bx bx-book-bookmark'></i>
+                    <span>Booking & Pembayaran</span>
+                </a>
+            </li>
 
         </ul>
 

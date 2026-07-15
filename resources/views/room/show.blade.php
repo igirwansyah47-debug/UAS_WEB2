@@ -12,5 +12,11 @@
             <li><i class="{{ $facility->icon }}"></i> {{ $facility->name }}</li>
             @endforeach
         </ul>
+        
+        @if(Auth::user()->role === 'tenant')
+        <div class="mt-3">
+            <a href="{{ route('booking.create', ['room_id' => $room->id]) }}" class="btn btn-success">Pesan Kamar Ini</a>
+        </div>
+        @endif
     </div>
 </x-app>
